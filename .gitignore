@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3-journal
+db.sqlite3
+*.log
+.env
+.env.*
+.deploy/
+staticfiles/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-pages/
+frontend/.vite/
