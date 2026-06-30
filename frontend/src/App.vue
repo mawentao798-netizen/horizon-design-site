@@ -115,6 +115,11 @@ function setupLazyImages() {
   if (!images.length) return
 
   const loadImage = (image) => {
+    const picture = image.closest('picture')
+    picture?.querySelectorAll('source[data-srcset]').forEach((source) => {
+      source.srcset = source.dataset.srcset
+      source.removeAttribute('data-srcset')
+    })
     image.src = image.dataset.src
     image.removeAttribute('data-src')
   }
@@ -133,7 +138,7 @@ function setupLazyImages() {
       })
     },
     {
-      rootMargin: '250px 0px',
+      rootMargin: '1200px 0px',
       threshold: 0.01,
     },
   )
@@ -185,6 +190,12 @@ function projectTranslation(project) {
   return projectTranslations[project.slug] || project.name
 }
 
+function avifSrc(src) {
+  return typeof src === 'string' && src.toLowerCase().endsWith('.webp')
+    ? src.replace(/\.webp$/i, '.avif')
+    : undefined
+}
+
 const navItems = [
   { label: text.home, href: '#/' },
   { label: text.cases, href: '#/cases' },
@@ -234,14 +245,21 @@ const activeHref = computed(() => {
             :href="`#/cases/${encodeURIComponent(project.slug)}`"
           >
             <span class="media-frame">
-              <img
-                :src="index < 5 ? project.cover.src : undefined"
-                :data-src="index < 5 ? undefined : project.cover.src"
-                :alt="project.name"
-                :loading="index < 5 ? 'eager' : 'lazy'"
-                :fetchpriority="index < 3 ? 'high' : 'low'"
-                decoding="async"
-              />
+              <picture>
+                <source
+                  type="image/avif"
+                  :srcset="index < 5 ? avifSrc(project.cover.src) : undefined"
+                  :data-srcset="index < 5 ? undefined : avifSrc(project.cover.src)"
+                />
+                <img
+                  :src="index < 5 ? project.cover.src : undefined"
+                  :data-src="index < 5 ? undefined : project.cover.src"
+                  :alt="project.name"
+                  :loading="index < 5 ? 'eager' : 'lazy'"
+                  :fetchpriority="index < 3 ? 'high' : 'low'"
+                  decoding="async"
+                />
+              </picture>
             </span>
             <span class="carousel-caption reveal-text">{{ project.name }}</span>
           </a>
@@ -286,14 +304,21 @@ const activeHref = computed(() => {
         <div class="project-grid">
           <article v-for="(project, index) in homeProjects" :key="project.slug" class="project-card reveal-card">
             <a class="project-cover" :href="`#/cases/${encodeURIComponent(project.slug)}`">
-              <img
-                :src="index < 6 ? project.cover.src : undefined"
-                :data-src="index < 6 ? undefined : project.cover.src"
-                :alt="project.name"
-                :loading="index < 6 ? 'eager' : 'lazy'"
-                fetchpriority="low"
-                decoding="async"
-              />
+              <picture>
+                <source
+                  type="image/avif"
+                  :srcset="index < 6 ? avifSrc(project.cover.src) : undefined"
+                  :data-srcset="index < 6 ? undefined : avifSrc(project.cover.src)"
+                />
+                <img
+                  :src="index < 6 ? project.cover.src : undefined"
+                  :data-src="index < 6 ? undefined : project.cover.src"
+                  :alt="project.name"
+                  :loading="index < 6 ? 'eager' : 'lazy'"
+                  fetchpriority="low"
+                  decoding="async"
+                />
+              </picture>
             </a>
             <div class="project-info reveal-text">
               <div class="post-meta">
@@ -337,14 +362,21 @@ const activeHref = computed(() => {
         <div class="project-grid">
           <article v-for="(project, index) in filteredProjects" :key="project.slug" class="project-card reveal-card">
             <a class="project-cover" :href="`#/cases/${encodeURIComponent(project.slug)}`">
-              <img
-                :src="index < 9 ? project.cover.src : undefined"
-                :data-src="index < 9 ? undefined : project.cover.src"
-                :alt="project.name"
-                :loading="index < 9 ? 'eager' : 'lazy'"
-                fetchpriority="low"
-                decoding="async"
-              />
+              <picture>
+                <source
+                  type="image/avif"
+                  :srcset="index < 9 ? avifSrc(project.cover.src) : undefined"
+                  :data-srcset="index < 9 ? undefined : avifSrc(project.cover.src)"
+                />
+                <img
+                  :src="index < 9 ? project.cover.src : undefined"
+                  :data-src="index < 9 ? undefined : project.cover.src"
+                  :alt="project.name"
+                  :loading="index < 9 ? 'eager' : 'lazy'"
+                  fetchpriority="low"
+                  decoding="async"
+                />
+              </picture>
             </a>
             <div class="project-info reveal-text">
               <div class="post-meta">
@@ -380,14 +412,21 @@ const activeHref = computed(() => {
       </header>
       <section class="image-stream" :aria-label="text.sourceOrder">
         <figure v-for="(image, index) in currentProject.images" :key="image.src">
-          <img
-            :src="index === 0 ? image.src : undefined"
-            :data-src="index === 0 ? undefined : image.src"
-            :alt="`${currentProject.name} ${image.originalName}`"
-            :loading="index === 0 ? 'eager' : 'lazy'"
-            :fetchpriority="index === 0 ? 'high' : 'low'"
-            decoding="async"
-          />
+          <picture>
+            <source
+              type="image/avif"
+              :srcset="index === 0 ? avifSrc(image.src) : undefined"
+              :data-srcset="index === 0 ? undefined : avifSrc(image.src)"
+            />
+            <img
+              :src="index === 0 ? image.src : undefined"
+              :data-src="index === 0 ? undefined : image.src"
+              :alt="`${currentProject.name} ${image.originalName}`"
+              :loading="index === 0 ? 'eager' : 'lazy'"
+              :fetchpriority="index === 0 ? 'high' : 'low'"
+              decoding="async"
+            />
+          </picture>
           <figcaption>{{ currentProject.name }} / {{ image.section || image.originalName }}</figcaption>
         </figure>
       </section>
