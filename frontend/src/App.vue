@@ -49,6 +49,7 @@ const inquiryFields = [
 const route = ref(parseRoute())
 const activeCategory = ref(text.all)
 let revealObserver = null
+let lazyImageObserver = null
 
 function parseRoute() {
   const hash = window.location.hash.replace(/^#/, '') || '/'
@@ -82,6 +83,7 @@ onUnmounted(() => {
   window.removeEventListener('hashchange', handleHashChange)
   window.removeEventListener('keydown', handleKeydown)
   revealObserver?.disconnect()
+  lazyImageObserver?.disconnect()
 })
 
 function setupRevealAnimations() {
@@ -103,6 +105,40 @@ function setupRevealAnimations() {
     element.style.setProperty('--reveal-delay', `${Math.min(index % 9, 8) * 55}ms`)
     revealObserver.observe(element)
   })
+
+  setupLazyImages()
+}
+
+function setupLazyImages() {
+  lazyImageObserver?.disconnect()
+  const images = document.querySelectorAll('img[data-src]:not([src])')
+  if (!images.length) return
+
+  const loadImage = (image) => {
+    image.src = image.dataset.src
+    image.removeAttribute('data-src')
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    images.forEach(loadImage)
+    return
+  }
+
+  lazyImageObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        loadImage(entry.target)
+        lazyImageObserver.unobserve(entry.target)
+      })
+    },
+    {
+      rootMargin: '250px 0px',
+      threshold: 0.01,
+    },
+  )
+
+  images.forEach((image) => lazyImageObserver.observe(image))
 }
 
 watch(activeCategory, () => nextTick(setupRevealAnimations))
@@ -114,8 +150,8 @@ const filteredProjects = computed(() => {
   if (activeCategory.value === text.all) return projects
   return projects.filter((project) => project.category === activeCategory.value)
 })
-const homeProjects = computed(() => projects)
-const carouselProjects = computed(() => [...projects, ...projects])
+const homeProjects = computed(() => projects.slice(0, 12))
+const carouselProjects = computed(() => projects)
 
 const projectTranslations = {
   '商业-ex机器人展厅': 'EX Robot Exhibition Hall',
@@ -198,7 +234,14 @@ const activeHref = computed(() => {
             :href="`#/cases/${encodeURIComponent(project.slug)}`"
           >
             <span class="media-frame">
-              <img :src="project.cover.src" :alt="project.name" />
+              <img
+                :src="index < 5 ? project.cover.src : undefined"
+                :data-src="index < 5 ? undefined : project.cover.src"
+                :alt="project.name"
+                :loading="index < 5 ? 'eager' : 'lazy'"
+                :fetchpriority="index < 3 ? 'high' : 'low'"
+                decoding="async"
+              />
             </span>
             <span class="carousel-caption reveal-text">{{ project.name }}</span>
           </a>
@@ -207,7 +250,7 @@ const activeHref = computed(() => {
 
       <section class="home-cover">
         <figure class="portrait-frame">
-          <img :src="siteData.brand.portrait.src" :alt="text.brand" />
+          <img :src="siteData.brand.portrait.src" :alt="text.brand" loading="eager" fetchpriority="high" decoding="async" />
         </figure>
         <div class="cover-copy">
           <p class="brand-sub">{{ text.brandSub }}</p>
@@ -241,9 +284,16 @@ const activeHref = computed(() => {
           <span>{{ projects.length }} {{ text.cases }} / {{ siteData.totalImages }} {{ text.projectImages }}</span>
         </div>
         <div class="project-grid">
-          <article v-for="project in homeProjects" :key="project.slug" class="project-card reveal-card">
+          <article v-for="(project, index) in homeProjects" :key="project.slug" class="project-card reveal-card">
             <a class="project-cover" :href="`#/cases/${encodeURIComponent(project.slug)}`">
-              <img :src="project.cover.src" :alt="project.name" />
+              <img
+                :src="index < 6 ? project.cover.src : undefined"
+                :data-src="index < 6 ? undefined : project.cover.src"
+                :alt="project.name"
+                :loading="index < 6 ? 'eager' : 'lazy'"
+                fetchpriority="low"
+                decoding="async"
+              />
             </a>
             <div class="project-info reveal-text">
               <div class="post-meta">
@@ -285,9 +335,16 @@ const activeHref = computed(() => {
       </section>
       <section class="feed-section compact">
         <div class="project-grid">
-          <article v-for="project in filteredProjects" :key="project.slug" class="project-card reveal-card">
+          <article v-for="(project, index) in filteredProjects" :key="project.slug" class="project-card reveal-card">
             <a class="project-cover" :href="`#/cases/${encodeURIComponent(project.slug)}`">
-              <img :src="project.cover.src" :alt="project.name" />
+              <img
+                :src="index < 9 ? project.cover.src : undefined"
+                :data-src="index < 9 ? undefined : project.cover.src"
+                :alt="project.name"
+                :loading="index < 9 ? 'eager' : 'lazy'"
+                fetchpriority="low"
+                decoding="async"
+              />
             </a>
             <div class="project-info reveal-text">
               <div class="post-meta">
@@ -322,8 +379,15 @@ const activeHref = computed(() => {
         />
       </header>
       <section class="image-stream" :aria-label="text.sourceOrder">
-        <figure v-for="image in currentProject.images" :key="image.src">
-          <img :src="image.src" :alt="`${currentProject.name} ${image.originalName}`" />
+        <figure v-for="(image, index) in currentProject.images" :key="image.src">
+          <img
+            :src="index === 0 ? image.src : undefined"
+            :data-src="index === 0 ? undefined : image.src"
+            :alt="`${currentProject.name} ${image.originalName}`"
+            :loading="index === 0 ? 'eager' : 'lazy'"
+            :fetchpriority="index === 0 ? 'high' : 'low'"
+            decoding="async"
+          />
           <figcaption>{{ currentProject.name }} / {{ image.section || image.originalName }}</figcaption>
         </figure>
       </section>

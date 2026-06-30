@@ -81,6 +81,12 @@ img {
   max-width: 100%;
 }
 
+img[data-src]:not([src]) {
+  min-height: 100%;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025));
+}
+
 .site {
   position: relative;
   z-index: 1;
@@ -665,6 +671,7 @@ img {
 
 .image-stream img {
   width: 100%;
+  min-height: 220px;
   height: auto;
   background: rgba(255, 255, 255, 0.08);
 }
